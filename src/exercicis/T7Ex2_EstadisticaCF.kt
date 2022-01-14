@@ -81,11 +81,17 @@ class EstadisticaCF : JFrame() {
         // Instruccions per agafar la informació de tots els anys de la província triada
 
         comboProv.addActionListener() {
+            area.text = ""
             database?.collection("Estadistica").whereEqualTo("Provincia", comboProv.selectedItem.toString()).orderBy("any").addSnapshotListener { querySnapshot, firestoreException ->
                 for (documento in querySnapshot!!.documentChanges) {
                     when (documento.type) {
-                        DocumentChange.Type.ADDED ->
-                            area.append(documento.document.getString("any" + ": " + documento.document.getString("Dones") + " - " + documento.document.getString("Homes")))
+                        DocumentChange.Type.ADDED -> {
+                            area.append(documento.document.getString("any") + ": " + documento.document.getString("Dones") + " - " + documento.document.getString("Homes") + "\n")
+                        }
+                        DocumentChange.Type.MODIFIED ->
+                            println("El documento ha sido modificado: " + documento.getDocument().getData());
+                        DocumentChange.Type.REMOVED ->
+                            println("Un mensaje ha sido borrado: " + documento.getDocument().getData());
                     }
                 }
             }

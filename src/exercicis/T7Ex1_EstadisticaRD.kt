@@ -25,7 +25,6 @@ class EstadisticaRD : JFrame() {
     val etiqueta = JLabel("Missatges:")
     val area = JTextArea()
 
-
     // en iniciar posem un contenidor per als elements anteriors
     init {
         defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -53,16 +52,18 @@ class EstadisticaRD : JFrame() {
 
         val options = FirebaseOptions.Builder()
             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-            .setDatabaseUrl("https://xat-ad.firebaseio.com").build()
+            .setDatabaseUrl("https://xat-ad.firebaseio.com")
+            .build()
 
         FirebaseApp.initializeApp(options)
 
         // Posar tota la llista de províncies al JComboBox anomenat provincia
         val resultado = FirebaseDatabase.getInstance().getReference("EstadisticaVariacioPoblacional")
+
         resultado.addChildEventListener(object : ChildEventListener {
             override
             fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-                provincia.addItem(resultado.toString())
+                provincia.addItem(dataSnapshot.child("nombre").getValue().toString())
             }
 
             override
@@ -84,13 +85,18 @@ class EstadisticaRD : JFrame() {
 
         provincia.addActionListener() {
             // Posar la informació de tots els anys en el JTextArea anomenat area
-            var seleccion = provincia.selectedIndex
-            val poblacion = FirebaseDatabase.getInstance().getReference("EstadisticaVariacioPoblacional")
+            val auxiliar = FirebaseDatabase.getInstance().getReference("EstadisticaVariacioPoblacional").child(provincia.selectedIndex.toString()).child("data")
+            area.text = ""
 
-            poblacion.addChildEventListener(object : ChildEventListener {
+            auxiliar.addChildEventListener(object : ChildEventListener {
                 override
                 fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-                    area.append(dataSnapshot.child(seleccion.toString()).getValue().toString())
+                    area.append(
+                        dataSnapshot
+                            .child("nombrePeriodo").getValue().toString() + ": " +
+                                dataSnapshot
+                                    .child("valor").getValue().toString() + "\n"
+                    )
                 }
 
                 override
@@ -109,6 +115,38 @@ class EstadisticaRD : JFrame() {
                 fun onCancelled(databaseError: DatabaseError) {
                 }
             })
+
+            /**resultado.addChildEventListener(object : ChildEventListener {
+                override
+                fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+                    area.append(dataSnapshot
+                        .child(provincia.selectedIndex.toString())
+                        .child("data")
+                        .child("nombrePeriodo")
+                        .getValue().toString() +
+                            ": " +
+                            dataSnapshot
+                                .child(provincia.selectedIndex.toString())
+                                .child("valor")
+                                .getValue().toString() + "\n")
+                }
+
+                override
+                fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+                }
+
+                override
+                fun onChildRemoved(dataSnapshot: DataSnapshot) {
+                }
+
+                override
+                fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {
+                }
+
+                override
+                fun onCancelled(databaseError: DatabaseError) {
+                }
+            })*/
         }
     }
 }
